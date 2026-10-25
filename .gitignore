@@ -4,3 +4,13 @@ bin/
 obj/
 .vs/
 node_modules/
+
+# Terraform local files
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Local credentials and environment files
+.env
+.env.*
+kubeconfig

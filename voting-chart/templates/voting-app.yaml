@@ -1,0 +1,57 @@
+{{- range $name, $app := .Values.apps }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: "{{ $app.image.repository }}:{{ $app.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          {{- with $app.containerPort }}
+          ports:
+            - containerPort: {{ . }}
+          {{- end }}
+          {{- with $app.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $app.emptyDir }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          {{- end }}
+      {{- if $app.emptyDir }}
+      volumes:
+        - name: data
+          emptyDir: {}
+      {{- end }}
+{{- if $app.service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+spec:
+  type: {{ $app.service.type }}
+  selector:
+    app: {{ $name }}
+  ports:
+    - port: {{ $app.service.port }}
+      targetPort: {{ $app.containerPort }}
+{{- end }}
+{{- end }}

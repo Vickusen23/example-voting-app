@@ -1,25 +1,28 @@
-FROM node:18-slim
-
-# add curl for healthcheck
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl tini && \
-    rm -rf /var/lib/apt/lists/*
-
+# Stage 1: Build & Prune Dependencies
+FROM node:22-alpine AS builder
 WORKDIR /usr/local/app
 
-# have nodemon available for local dev use (file watching)
-RUN npm install -g nodemon
-
+# Copy dependency manifests
 COPY package*.json ./
 
-RUN npm ci && \
- npm cache clean --force && \
- mv /usr/local/app/node_modules /node_modules
+# Install only production dependencies
+RUN npm ci --only=production
 
+# Stage 2: Final Secure Lightweight Image
+FROM node:22-alpine
+WORKDIR /usr/local/app
+
+# Upgrade system packages to patch OS vulnerabilities
+RUN apk update && apk upgrade --no-cache
+
+# Run as non-root user for security
+USER node
+
+# Copy dependencies and source code from builder
+COPY --from=builder /usr/local/app/node_modules ./node_modules
 COPY . .
 
-ENV PORT=80
 EXPOSE 80
+ENV PORT=80
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "server.js"]

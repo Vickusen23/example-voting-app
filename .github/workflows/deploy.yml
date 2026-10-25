@@ -1,0 +1,53 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: vickusen1
+          password: ${{ secrets.DOCKER_KEY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 1. Build local image on runner
+      - name: Build Vote Image Locally
+        uses: docker/build-push-action@v5
+        with:
+          context: ./vote
+          load: true
+          tags: vote-local:${{ github.sha }}
+
+      # 2. Scan with Trivy before pushing
+      - name: Scan Local Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'vote-local:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # 3. Push to Docker Hub after passing scan
+      - name: Push Image to Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: ./vote
+          push: true
+          tags: |
+            vickusen1/vote:${{ github.sha }}
+            vickusen1/vote:latest

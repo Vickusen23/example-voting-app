@@ -1,0 +1,47 @@
+apps:
+  vote:
+    image:
+      repository: dockersamples/examplevotingapp_vote
+      tag: latest
+    containerPort: 80
+    service:
+      type: LoadBalancer
+      port: 80
+
+  result:
+    image:
+      repository: dockersamples/examplevotingapp_result
+      tag: latest
+    containerPort: 80
+    service:
+      type: LoadBalancer
+      port: 80
+
+  worker:
+    image:
+      repository: dockersamples/examplevotingapp_worker
+      tag: latest
+
+  redis:
+    image:
+      repository: redis
+      tag: 7.2-alpine
+    containerPort: 6379
+    service:
+      type: ClusterIP
+      port: 6379
+
+  db:
+    image:
+      repository: postgres
+      tag: 15-alpine
+    containerPort: 5432
+    service:
+      type: ClusterIP
+      port: 5432
+    env:
+      - name: POSTGRES_USER
+        value: postgres
+      - name: POSTGRES_PASSWORD
+        value: postgres
+    emptyDir: true
