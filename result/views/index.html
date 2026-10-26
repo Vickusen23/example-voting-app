@@ -1,43 +1,239 @@
 <!DOCTYPE html>
 <html ng-app="APCvsNDC">
-  <head>
-    <meta charset="utf-8">
-    <title>APC vs NDC -- Result</title>
-    <base href="/index.html">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="docker-compose, docker, stack">
-    <meta name="author" content="Docker">
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body ng-controller="statsCtrl">
-     <div id="background-stats">
-       <div id="background-stats-1">
-       </div><!--
-      --><div id="background-stats-2">
-      </div>
-    </div>
-    <div id="content-container">
-      <div id="content-container-center">
-        <div id="choice">
-          <div class="choice cats">
-            <div class="label">APC</div>
-            <div class="stat">{{aPercent | number:1}}%</div>
-          </div>
-          <div class="divider"></div>
-          <div class="choice dogs">
-            <div class="label">NDC</div>
-            <div class="stat">{{bPercent | number:1}}%</div>
+<head>
+  <meta charset="utf-8">
+
+  <title>APC vs NDC -- Result</title>
+
+  <base href="/index.html">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="keywords" content="docker-compose, docker, stack">
+  <meta name="author" content="Docker">
+
+  <link rel="stylesheet" href="/stylesheets/style.css">
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #06c3c5;
+    }
+
+    body {
+      position: relative;
+    }
+
+    /* Main background */
+    #background-stats {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #06c3c5;
+      z-index: 1;
+    }
+
+    #background-stats-1 {
+      display: none;
+    }
+
+    #background-stats-2 {
+      display: none;
+    }
+
+    /* Center content */
+    #content-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 690px;
+      height: 294px;
+      z-index: 10;
+    }
+
+    #content-container-center {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* White result card */
+    #choice {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    /* APC / NDC sections */
+    .choice {
+      width: 50%;
+      height: 75%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .choice .label {
+      font-size: 48px;
+      font-weight: 500;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .choice .stat {
+      font-size: 48px;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    /* APC */
+    .choice.apc {
+      color: #2296e8;
+    }
+
+    /* NDC */
+    .choice.ndc {
+      color: #06c3c5;
+    }
+
+    /* Centre divider */
+    .divider {
+      width: 2px;
+      height: 220px;
+      background: #bfc4c7;
+      flex-shrink: 0;
+    }
+
+    /* Vote counter */
+    #result {
+      position: fixed;
+      right: 28px;
+      bottom: 18px;
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 58px;
+      font-weight: 400;
+      z-index: 20;
+      line-height: 1;
+    }
+
+    /* Responsive display */
+    @media (max-width: 800px) {
+      #content-container {
+        width: 80%;
+        height: 250px;
+      }
+
+      .choice .label,
+      .choice .stat {
+        font-size: 38px;
+      }
+
+      .divider {
+        height: 180px;
+      }
+
+      #result {
+        font-size: 42px;
+        right: 20px;
+        bottom: 15px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      #content-container {
+        width: 90%;
+        height: 210px;
+      }
+
+      .choice .label,
+      .choice .stat {
+        font-size: 30px;
+      }
+
+      .divider {
+        height: 150px;
+      }
+
+      #result {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+
+<body ng-controller="statsCtrl">
+
+  <!-- Background -->
+  <div id="background-stats">
+    <div id="background-stats-1"></div>
+    <div id="background-stats-2"></div>
+  </div>
+
+  <!-- Result Card -->
+  <div id="content-container">
+    <div id="content-container-center">
+
+      <div id="choice">
+
+        <!-- APC -->
+        <div class="choice apc">
+          <div class="label">APC</div>
+          <div class="stat">
+            {{aPercent | number:1}}%
           </div>
         </div>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- NDC -->
+        <div class="choice ndc">
+          <div class="label">NDC</div>
+          <div class="stat">
+            {{bPercent | number:1}}%
+          </div>
+        </div>
+
       </div>
+
     </div>
-    <div id="result">
-      <span ng-if="total == 0">No votes yet</span>
-      <span ng-if="total == 1">{{total}} vote</span>
-      <span ng-if="total >= 2">{{total}} votes</span>
-    </div>
-    <script src="socket.io.js"></script>
-    <script src="angular.min.js"></script>
-    <script src="app.js"></script>
-  </body>
+  </div>
+
+  <!-- Vote Count -->
+  <div id="result">
+
+    <span ng-if="total == 0">
+      No votes yet
+    </span>
+
+    <span ng-if="total == 1">
+      {{total}} vote
+    </span>
+
+    <span ng-if="total >= 2">
+      {{total}} votes
+    </span>
+
+  </div>
+
+  <!-- Existing application scripts -->
+  <script src="socket.io.js"></script>
+  <script src="angular.min.js"></script>
+  <script src="app.js"></script>
+
+</body>
 </html>
